@@ -1,0 +1,40 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/package-solution.schema.json",
+  "solution": {
+    "name": "techwebpart-client-side-solution",
+    "id": "573988b9-9185-4c99-a8b4-9c8959b2ac25",
+    "version": "1.0.0.0",
+    "includeClientSideAssets": true,
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "developer": {
+      "name": "",
+      "websiteUrl": "",
+      "privacyUrl": "",
+      "termsOfUseUrl": "",
+      "mpnId": "Undefined-1.14.0"
+    },
+    "metadata": {
+      "shortDescription": {
+        "default": "techwebpart description"
+      },
+      "longDescription": {
+        "default": "techwebpart description"
+      },
+      "screenshotPaths": [],
+      "videoUrl": "",
+      "categories": []
+    },
+    "features": [
+      {
+        "title": "Tech Webpart",
+        "description": "The feature that activates elements of the techwebpart solution.",
+        "id": "246056b3-d6ab-4e7e-a44f-00a5e642a431",
+        "version": "1.0.0.0"
+      }
+    ]
+  },
+  "paths": {
+    "zippedPackage": "solution/techwebpart.sppkg"
+  }
+}
