@@ -1,97 +1,136 @@
-import { Version } from '@microsoft/sp-core-library'
+import { Version } from '@microsoft/sp-core-library';
 import {
 	IPropertyPaneConfiguration,
 	PropertyPaneTextField,
 	PropertyPaneCheckbox,
 	PropertyPaneDropdown,
 	PropertyPaneToggle,
-} from '@microsoft/sp-property-pane'
-import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base'
-import { IReadonlyTheme } from '@microsoft/sp-component-base'
-import { escape } from '@microsoft/sp-lodash-subset'
+} from '@microsoft/sp-property-pane';
+import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
+import { IReadonlyTheme } from '@microsoft/sp-component-base';
+import { escape } from '@microsoft/sp-lodash-subset';
 
-import styles from './HelloWorldWebPart.module.scss'
-import * as strings from 'HelloWorldWebPartStrings'
+import styles from './HelloWorldWebPart.module.scss';
+import * as strings from 'HelloWorldWebPartStrings';
+
+import {
+	SPHttpClient,
+	SPHttpClientResponse
+} from '@microsoft/sp-http';
 
 export interface IHelloWorldWebPartProps {
-	description: string
-	test: string
-	test1: boolean
-	test2: string
-	test3: boolean
+	description: string;
+	test: string;
+	test1: boolean;
+	test2: string;
+	test3: boolean;
 }
 
+export interface ISPLists {
+	value: ISPList[];
+}
+
+export interface ISPList {
+	Title: string;
+	Id: string;
+}
+
+
 export default class HelloWorldWebPart extends BaseClientSideWebPart<IHelloWorldWebPartProps> {
-	private _isDarkTheme: boolean = false
-	private _environmentMessage: string = ''
+	private _isDarkTheme: boolean = false;
+	private _environmentMessage: string = '';
 
 	protected onInit(): Promise<void> {
-		this._environmentMessage = this._getEnvironmentMessage()
+		this._environmentMessage = this._getEnvironmentMessage();
 
-		return super.onInit()
+		return super.onInit();
 	}
 
 	public render(): void {
+
+
+
 		this.domElement.innerHTML = `
-    <section class="${styles.helloWorld} ${
-			!!this.context.sdks.microsoftTeams ? styles.teams : ''
-		}">
-      <div class="${styles.welcome}">
-        <img alt="" src="${
-					this._isDarkTheme
-						? require('./assets/welcome-dark.png')
-						: require('./assets/welcome-light.png')
-				}" class="${styles.welcomeImage}" />
-        <h2>Well done, ${escape(
-					this.context.pageContext.user.displayName
-				)}!</h2>
-        <div>${this._environmentMessage}</div>
-      </div>
-      <div>
-        <h3>Welcome to SharePoint Framework!</h3>
-        <div>Web part description: <strong>${escape(
-					this.properties.description
-				)}</strong></div>
-        <div>Web part test: <strong>${escape(
-					this.properties.test
-				)}</strong></div>
-        <div>Loading from: <strong>${escape(
-					this.context.pageContext.web.title
-				)}</strong></div>        
-      </div>
-    </section>`
+<section class="${styles.helloWorld} ${!!this.context.sdks.microsoftTeams ? styles.teams : ''}">
+  <div class="${styles.welcome}">
+    <img alt="" src="${this._isDarkTheme ? require('./assets/welcome-dark.png') : require('./assets/welcome-light.png')}" class="${styles.welcomeImage}" />
+    <h2>Well done, ${escape(this.context.pageContext.user.displayName)}!</h2>
+    <div>${this._environmentMessage}</div>
+  </div>
+  <div>
+    <h3>Welcome to SharePoint Framework!</h3>
+    <div>Web part description: <strong>${escape(this.properties.description)}</strong></div>
+    <div>Web part test: <strong>${escape(this.properties.test)}</strong></div>
+    <div>Loading from: <strong>${escape(this.context.pageContext.web.title)}</strong></div>
+  </div>
+  <div id="spListContainer" />
+</section>`;
+
+		this._renderListAsync();
 	}
+
+
+	private _renderListAsync(): void {
+		this._getListData()
+			.then((response) => {
+				this._renderList(response.value);
+			});
+	}
+
+
+	private _getListData(): Promise<ISPLists> {
+		return this.context.spHttpClient.get(this.context.pageContext.web.absoluteUrl + `/_api/web/lists?$filter=Hidden eq false`, SPHttpClient.configurations.v1)
+			.then((response: SPHttpClientResponse) => {
+				return response.json();
+			});
+	}
+
+	private _renderList(items: ISPList[]): void {
+		let html: string = '';
+		items.forEach((item: ISPList) => {
+			html += `
+		<ul class="${styles.list}">
+		  <li class="${styles.listItem}">
+			<span class="ms-font-l">${item.Title}</span>
+		  </li>
+		</ul>`;
+		});
+
+		const listContainer: Element = this.domElement.querySelector('#spListContainer');
+		listContainer.innerHTML = html;
+	}
+
 
 	private _getEnvironmentMessage(): string {
 		if (!!this.context.sdks.microsoftTeams) {
 			// running in Teams
 			return this.context.isServedFromLocalhost
 				? strings.AppLocalEnvironmentTeams
-				: strings.AppTeamsTabEnvironment
+				: strings.AppTeamsTabEnvironment;
 		}
 
 		return this.context.isServedFromLocalhost
 			? strings.AppLocalEnvironmentSharePoint
-			: strings.AppSharePointEnvironment
+			: strings.AppSharePointEnvironment;
 	}
 
 	protected onThemeChanged(currentTheme: IReadonlyTheme | undefined): void {
 		if (!currentTheme) {
-			return
+			return;
 		}
 
-		this._isDarkTheme = !!currentTheme.isInverted
-		const { semanticColors } = currentTheme
-		this.domElement.style.setProperty('--bodyText', semanticColors.bodyText)
-		this.domElement.style.setProperty('--link', semanticColors.link)
+		this._isDarkTheme = !!currentTheme.isInverted;
+		const { semanticColors } = currentTheme;
+		this.domElement.style.setProperty('--bodyText', semanticColors.bodyText);
+		this.domElement.style.setProperty('--link', semanticColors.link);
 		this.domElement.style.setProperty(
 			'--linkHovered',
 			semanticColors.linkHovered
-		)
+		);
 	}
 
 	protected get dataVersion(): Version {
-		return Version.parse('1.0')
+		return Version.parse('1.0');
 	}
 
 	protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
@@ -134,6 +173,6 @@ export default class HelloWorldWebPart extends BaseClientSideWebPart<IHelloWorld
 					],
 				},
 			],
-		}
+		};
 	}
 }
